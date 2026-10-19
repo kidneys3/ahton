@@ -1,0 +1,15 @@
+node_modules/
+dist/
+# Linked worktrees live inside the repo and were untracked but not ignored, so
+# git add -A would have committed six checkouts and their node_modules.
+.worktrees/
+# Live notification discovery data includes a private workspace path.
+.vscode/vscode-notify-desktop-port.json
+*.vsix
+*.obj
+.diagnostics/
+.vscode-test/
+.vscode-test-user/
+*.log
+*.bak
+*.tmp

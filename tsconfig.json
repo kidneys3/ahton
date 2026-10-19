@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "noImplicitAny": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2022",
+    "types": [
+      "node",
+      "vscode"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.mjs"
+  ]
+}

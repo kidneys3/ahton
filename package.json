@@ -1,0 +1,124 @@
+{
+  "name": "ahton",
+  "displayName": "Ahton: Claude Code and Codex CLI Notifications",
+  "description": "Desktop popup notifications for Claude Code and Codex CLI terminals in VS Code on Windows, and a click on the popup focuses the right window and terminal.",
+  "version": "0.7.0",
+  "publisher": "kidneys3",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kidneys3/ahton.git"
+  },
+  "homepage": "https://github.com/kidneys3/ahton#readme",
+  "bugs": {
+    "url": "https://github.com/kidneys3/ahton/issues"
+  },
+  "engines": {
+    "vscode": "^1.93.0"
+  },
+  "categories": [
+    "AI",
+    "Other"
+  ],
+  "keywords": [
+    "claude code",
+    "claude",
+    "codex cli",
+    "codex",
+    "anthropic",
+    "openai",
+    "notification",
+    "notifications",
+    "desktop notification",
+    "popup",
+    "toast",
+    "alert",
+    "terminal",
+    "cli",
+    "windows",
+    "focus",
+    "agent",
+    "ai agent",
+    "coding agent",
+    "hooks",
+    "productivity"
+  ],
+  "icon": "images/icon.png",
+  "main": "./dist/extension.js",
+  "extensionKind": [
+    "ui"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true,
+      "description": "Ahton reads no workspace content. It observes managed terminals, shows fixed notification text, and focuses this window. Without this, Restricted Mode disables the extension and no agent notification is ever raised."
+    }
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "ahton.configure",
+        "title": "Ahton: Configure Claude Code and Codex"
+      },
+      {
+        "command": "ahton.sendClaudeTestNotification",
+        "title": "Ahton: Send Claude Routing Test Notification"
+      },
+      {
+        "command": "ahton.sendCodexTestNotification",
+        "title": "Ahton: Send Codex Routing Test Notification"
+      },
+      {
+        "command": "ahton.showDiagnostics",
+        "title": "Ahton: Show Router Diagnostics"
+      },
+      {
+        "command": "ahton.startCodexTerminal",
+        "title": "Ahton: Start Managed Codex Terminal"
+      }
+    ],
+    "configuration": {
+      "title": "Ahton",
+      "properties": {
+        "ahton.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Route fixed Claude Code CLI and Codex CLI terminal markers back to their originating VS Code window."
+        },
+        "ahton.showTerminalLabel": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the name you gave a terminal (for example \"claude api\") in the popup. Turn off to show the provider name only. The name is shown only if it follows the label rules in the README."
+        },
+        "ahton.rollover.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Let a Claude Code session ask Ahton to open a fresh Claude terminal in this workspace. Off by default. When off, the request is refused and no terminal is opened."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node scripts/clean-dist.mjs && esbuild src/extension.ts --bundle --main-fields=module,main --platform=node --format=cjs --target=node18 --external:vscode --outfile=dist/extension.js && esbuild adapters/*.mjs --bundle --platform=node --format=esm --target=node18 --outdir=dist/adapters --out-extension:.js=.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test test/*.test.mjs",
+    "check:classified": "node scripts/check-classified-data.mjs .",
+    "check:classified:self-test": "node scripts/check-classified-data.mjs --self-test",
+    "verify": "npm run check:classified:self-test && npm run check:classified && npm run typecheck && npm run build && npm test",
+    "vscode:prepublish": "npm run verify",
+    "package": "vsce package --target win32-x64 --out ahton-0.7.0-win32-x64.vsix"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "20.11.19",
+    "@types/vscode": "1.93.0",
+    "@vscode/vsce": "3.9.2",
+    "esbuild": "0.28.1",
+    "jsonc-parser": "3.3.1",
+    "smol-toml": "1.9.0",
+    "typescript": "5.6.3"
+  }
+}

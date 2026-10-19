@@ -1,0 +1,18 @@
+# Allowlist: exclude everything, then re-include exactly what the extension runs.
+# The exclusion list this replaces shipped an untracked claim note holding a
+# private home path in 0.6.9 (found 2026-10-19), because vsce packages the
+# working directory and an exclusion list only covers names someone remembered.
+# package.json "files" is not honoured while this file exists (vsce 3.9.2), so
+# the allowlist lives here. test/vsix-contents.test.mjs asks vsce what it ships.
+#
+# Every dependency is build-time: package.json declares "dependencies": {} and
+# esbuild bundles the extension and Claude adapters into dist/.
+**
+!dist/extension.js
+!dist/adapters/*.mjs
+!native/windows-focus-helper.exe
+!README.md
+!LICENSE
+!THIRD_PARTY_NOTICES.md
+!CHANGELOG.md
+!images/icon.png

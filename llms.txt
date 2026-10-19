@@ -1,0 +1,27 @@
+# Ahton
+
+> Ahton is a VS Code extension for Windows x64. It shows a desktop popup when Claude Code or Codex CLI finishes or needs input in a VS Code terminal, and clicking the popup focuses the right VS Code window and terminal. Popup text is fixed and never contains prompts, replies or paths. It makes no network requests.
+
+Install: VS Code Marketplace `kidneys3.ahton`, Open VSX `kidneys3/ahton`, or `code --install-extension kidneys3.ahton`. After install, run the command "Ahton: Configure Claude Code and Codex".
+
+Not supported: macOS, Linux, VS Code chat, the ChatGPT desktop app, terminals outside VS Code.
+
+## Docs
+
+- [README](https://github.com/kidneys3/ahton#readme): install, setup, settings, commands, privacy, limits and FAQ
+- [Changelog](https://github.com/kidneys3/ahton/blob/main/CHANGELOG.md): release notes
+
+## Listings
+
+- [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=kidneys3.ahton)
+- [Open VSX](https://open-vsx.org/extension/kidneys3/ahton)
+
+## Source
+
+- [Repository](https://github.com/kidneys3/ahton)
+- [Issues](https://github.com/kidneys3/ahton/issues)
+- [Native helper source and checksum](https://github.com/kidneys3/ahton/tree/main/native)
+
+## Optional
+
+- [Third-party notices](https://github.com/kidneys3/ahton/blob/main/THIRD_PARTY_NOTICES.md)
