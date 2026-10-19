@@ -28,6 +28,23 @@ test("native popup shows the workspace name in the chip and no PROVIDER eyebrow"
   assert.match(source, /0x00B7/);
 });
 
+// Codex CX-1 on 07eeb46: a 28-character folder name measured 285 px against
+// 176 px of chip, so the end ellipsis cut "Terminal N" off and two terminals in
+// one folder showed the same chip. The folder part shrinks first.
+test("a long workspace name shrinks before the terminal part of the chip", () => {
+  const source = readFileSync(sourceUrl, "utf8");
+  assert.match(source, /std::wstring fitChipText\(HDC canvas, int maxWidth\)/);
+  assert.match(source, /notificationChipText = fitChipText\(canvas, /);
+  assert.match(source, /notificationWorkspace\.substr\(0, keep\) \+ wchar_t\(0x2026\)/);
+});
+
+// Codex CX-2 on 07eeb46: without DT_NOPREFIX an "&" in a folder or terminal
+// name is drawn as an underline under the next letter, so "R&D" reads "RD".
+test("user text is drawn without ampersand mnemonics", () => {
+  const source = readFileSync(sourceUrl, "utf8");
+  assert.match(source, /notificationChipText\.c_str\(\), -1, &labelBounds,\s*DT_LEFT \| DT_VCENTER \| DT_SINGLELINE \| DT_NOPREFIX/);
+});
+
 test("native popup is fixed-content, non-activating, and authority-bound", () => {
   const source = readFileSync(sourceUrl, "utf8");
   assert.match(source, /WS_EX_TOPMOST \| WS_EX_TOOLWINDOW \| WS_EX_NOACTIVATE/);

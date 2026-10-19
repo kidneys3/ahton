@@ -67,6 +67,9 @@ ULONGLONG notificationShownAt = 0;
 ULONGLONG notificationAnimationStartedAt = 0;
 std::wstring notificationTitle;
 std::wstring notificationTabLabel;
+// Empty when no acceptable workspace name was given.
+std::wstring notificationWorkspace;
+std::wstring notificationChipText;
 bool notificationIsCodex = false;
 HDC notificationBuffer = nullptr;
 HBITMAP notificationBitmap = nullptr;
@@ -179,6 +182,28 @@ void drawNotificationIcon(HDC device) {
 
 // The user can retune the popup without a rebuild. Anything unparseable or out of
 // range falls back to the default rather than producing a popup they cannot read.
+int textWidth(HDC canvas, const std::wstring& text) {
+    SIZE size{};
+    GetTextExtentPoint32W(canvas, text.c_str(), static_cast<int>(text.size()), &size);
+    return size.cx;
+}
+
+// The chip text, "<workspace> <dot> <terminal>", fitted to maxWidth. The
+// terminal part tells two terminals in one folder apart, so the workspace part
+// shrinks first, with an ellipsis, and is dropped whole if even one letter of
+// it does not fit. Only the terminal part is left to DT_END_ELLIPSIS.
+std::wstring fitChipText(HDC canvas, int maxWidth) {
+    if (notificationWorkspace.empty()) return notificationTabLabel;
+    const std::wstring suffix = std::wstring(L" ") + wchar_t(0x00B7) + L" " + notificationTabLabel;
+    const std::wstring full = notificationWorkspace + suffix;
+    if (textWidth(canvas, full) <= maxWidth) return full;
+    for (size_t keep = notificationWorkspace.size() - 1; keep >= 1; --keep) {
+        const std::wstring candidate = notificationWorkspace.substr(0, keep) + wchar_t(0x2026) + suffix;
+        if (textWidth(canvas, candidate) <= maxWidth) return candidate;
+    }
+    return notificationTabLabel;
+}
+
 double sizeFactorFromEnvironment() {
     wchar_t buffer[32]{};
     const DWORD length = GetEnvironmentVariableW(L"AHTON_POPUP_SCALE", buffer,
@@ -318,14 +343,13 @@ LRESULT CALLBACK notificationWindowProc(HWND window, UINT message, WPARAM wParam
         // truncate every name or leave a wide empty box around a short one.
         SelectObject(canvas, notificationLabelFont
             ? notificationLabelFont : GetStockObject(DEFAULT_GUI_FONT));
-        SIZE labelSize{};
-        GetTextExtentPoint32W(canvas, notificationTabLabel.c_str(),
-                              static_cast<int>(notificationTabLabel.size()), &labelSize);
         const int chipLeft = sc(82);
         const int chipTextLeft = sc(91);
         // Stops short of the OPEN affordance at the right edge whatever the name.
         const int chipLimit = bounds.right - sc(100);
-        int chipRight = chipTextLeft + labelSize.cx + sc(9);
+        notificationChipText = fitChipText(canvas, chipLimit - sc(8) - chipTextLeft);
+        const int chipTextWidth = textWidth(canvas, notificationChipText);
+        int chipRight = chipTextLeft + chipTextWidth + sc(9);
         if (chipRight > chipLimit) chipRight = chipLimit;
         if (chipRight < sc(140)) chipRight = sc(140);
 
@@ -341,8 +365,8 @@ LRESULT CALLBACK notificationWindowProc(HWND window, UINT message, WPARAM wParam
 
         SetTextColor(canvas, RGB(34, 99, 139));
         RECT labelBounds{chipTextLeft, sc(68), chipRight - sc(8), sc(84)};
-        DrawTextW(canvas, notificationTabLabel.c_str(), -1, &labelBounds,
-                  DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
+        DrawTextW(canvas, notificationChipText.c_str(), -1, &labelBounds,
+                  DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS);
 
         SetTextColor(canvas, RGB(23, 106, 167));
         // Anchored to the right edge, not to the old 390-unit width, so the
@@ -461,10 +485,7 @@ int notify(HWND target, DWORD extensionHostPid, const wchar_t* provider, const w
         // A workspace name leads the chip: "api <dot> Terminal 3". The middle dot
         // is built from its code point so the source stays ASCII. A refused name
         // is dropped and the chip is unchanged.
-        if (isAcceptableWorkspace(displayWorkspace)) {
-            notificationTabLabel = std::wstring(displayWorkspace) + L" " + wchar_t(0x00B7) + L" " +
-                                   notificationTabLabel;
-        }
+        if (isAcceptableWorkspace(displayWorkspace)) notificationWorkspace = displayWorkspace;
     } else {
         return kInvalidArguments;
     }
