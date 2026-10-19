@@ -58,6 +58,29 @@ export function shortLabel(name) {
 }
 
 /**
+ * Reduce the VS Code window's folder name (vscode.workspace.name) to a label
+ * safe to show, or null to omit it. Same rules as shortLabel() -- length, word
+ * count, allowed characters, a letter, no ".." -- except the provider-prefix
+ * rule. The prefix exists to tell a name the user typed from a title the agent
+ * wrote; a folder name is chosen by the user, never written by the agent, so
+ * there is nothing to discriminate. A multi-root window's " (Workspace)" suffix
+ * is stripped first. Anything else returns null: omitted, never truncated.
+ *
+ * @param {unknown} name
+ * @returns {string | null}
+ */
+export function workspaceLabel(name) {
+  if (typeof name !== "string") return null;
+  const collapsed = name.trim().replace(/\s+/g, " ").replace(/ \(Workspace\)$/, "");
+  if (collapsed.length === 0 || collapsed.length > MAX_LABEL_LENGTH) return null;
+  if (!ALLOWED_LABEL.test(collapsed)) return null;
+  if (collapsed.split(" ").length > MAX_LABEL_WORDS) return null;
+  if (!/[A-Za-z]/.test(collapsed)) return null;
+  if (collapsed.includes("..")) return null;
+  return collapsed;
+}
+
+/**
  * With the label setting off the popup keeps its ordinal and drops the typed
  * name. The input is not changed.
  *

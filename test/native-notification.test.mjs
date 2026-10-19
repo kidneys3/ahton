@@ -68,3 +68,38 @@ test("native notification accepts terminal display targets only", async () => {
   assert.equal(await session.outcome, "failed");
   assert.equal(called, false);
 });
+
+async function argvFor(target) {
+  const calls = [];
+  const run = async (...args) => { calls.push(args); return { stdout: "", stderr: "" }; };
+  const session = startNativeNotification(
+    "helper.exe", "67514", 2832, "codex", "attention", target, run, "win32",
+  );
+  return { outcome: await session.outcome, args: calls[0]?.[1] };
+}
+
+test("a workspace name alone is sent in the ten-argument form with an empty label slot", async () => {
+  const { outcome, args } = await argvFor({ kind: "terminal", index: 3, workspace: "api" });
+  assert.equal(outcome, "activated");
+  assert.deepEqual(args, ["notify", "67514", "2832", "codex", "attention", "terminal", "3", "", "api"]);
+});
+
+test("label and workspace are sent together in the ten-argument form", async () => {
+  const { args } = await argvFor({ kind: "terminal", index: 3, label: "claude web", workspace: "web docs" });
+  assert.deepEqual(args.slice(6), ["3", "claude web", "web docs"]);
+});
+
+test("without a workspace the eight and nine-argument forms are unchanged", async () => {
+  assert.deepEqual((await argvFor({ kind: "terminal", index: 3 })).args,
+    ["notify", "67514", "2832", "codex", "attention", "terminal", "3"]);
+  assert.deepEqual((await argvFor({ kind: "terminal", index: 3, label: "claude web" })).args,
+    ["notify", "67514", "2832", "codex", "attention", "terminal", "3", "claude web"]);
+});
+
+test("a tampered workspace refuses the whole popup", async () => {
+  for (const workspace of ["C:\Work\api", "a".repeat(29), 'x"y', "api (Workspace)", 5, ""]) {
+    const { outcome, args } = await argvFor({ kind: "terminal", index: 1, workspace });
+    assert.equal(outcome, "failed");
+    assert.equal(args, undefined);
+  }
+});

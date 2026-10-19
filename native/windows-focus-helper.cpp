@@ -303,8 +303,8 @@ LRESULT CALLBACK notificationWindowProc(HWND window, UINT message, WPARAM wParam
         HGDIOBJ oldFont = SelectObject(canvas, notificationEyebrowFont
             ? notificationEyebrowFont : GetStockObject(DEFAULT_GUI_FONT));
         SetTextColor(canvas, RGB(100, 116, 130));
-        RECT eyebrow{sc(82), sc(17), sc(265), sc(30)};
-        DrawTextW(canvas, L"PROVIDER", -1, &eyebrow, DT_LEFT | DT_SINGLELINE);
+        // No eyebrow text: the workspace name lives in the chip beside the
+        // terminal label.
 
         SelectObject(canvas, notificationTitleFont
             ? notificationTitleFont : GetStockObject(DEFAULT_GUI_FONT));
@@ -394,13 +394,11 @@ bool hasProviderPrefix(const wchar_t* label, size_t length) {
     return false;
 }
 
-bool isAcceptableLabel(const wchar_t* label) {
-    if (!label) return false;
-    const size_t length = std::wcslen(label);
+// Shared body of isAcceptableLabel and isAcceptableWorkspace: every rule
+// except the provider prefix.
+bool isAcceptableText(const wchar_t* label, size_t length) {
     if (length == 0 || length > 28) return false;
     if (label[0] == L' ' || label[length - 1] == L' ') return false;
-    // Mirrors REQUIRED_LABEL_PREFIX. A shell-set title does not begin this way.
-    if (!hasProviderPrefix(label, length)) return false;
     bool hasLetter = false;
     int words = 1;
     for (size_t index = 0; index < length; ++index) {
@@ -422,8 +420,25 @@ bool isAcceptableLabel(const wchar_t* label) {
     return hasLetter && words <= 4;
 }
 
+bool isAcceptableLabel(const wchar_t* label) {
+    if (!label) return false;
+    const size_t length = std::wcslen(label);
+    // Mirrors REQUIRED_LABEL_PREFIX. A shell-set title does not begin this way.
+    if (length == 0 || !hasProviderPrefix(label, length)) return false;
+    return isAcceptableText(label, length);
+}
+
+// Mirrors workspaceLabel() in src/terminal-display-label.mjs: the label rules
+// without the provider-prefix rule, because a folder name is chosen by the
+// user, not written by the agent. The extension strips " (Workspace)" first.
+bool isAcceptableWorkspace(const wchar_t* workspace) {
+    if (!workspace) return false;
+    return isAcceptableText(workspace, std::wcslen(workspace));
+}
+
 int notify(HWND target, DWORD extensionHostPid, const wchar_t* provider, const wchar_t* reason,
-           const wchar_t* displayKind, unsigned int displayIndex, const wchar_t* displayLabel) {
+           const wchar_t* displayKind, unsigned int displayIndex, const wchar_t* displayLabel,
+           const wchar_t* displayWorkspace) {
     if (std::wcscmp(provider, L"codex") == 0) {
         notificationTitle = L"Codex";
         notificationIsCodex = true;
@@ -443,6 +458,13 @@ int notify(HWND target, DWORD extensionHostPid, const wchar_t* provider, const w
         notificationTabLabel = isAcceptableLabel(displayLabel)
             ? std::wstring(displayLabel)
             : L"Terminal " + std::to_wstring(displayIndex);
+        // A workspace name leads the chip: "api <dot> Terminal 3". The middle dot
+        // is built from its code point so the source stays ASCII. A refused name
+        // is dropped and the chip is unchanged.
+        if (isAcceptableWorkspace(displayWorkspace)) {
+            notificationTabLabel = std::wstring(displayWorkspace) + L" " + wchar_t(0x00B7) + L" " +
+                                   notificationTabLabel;
+        }
     } else {
         return kInvalidArguments;
     }
@@ -680,8 +702,9 @@ int wmain(int argc, wchar_t* argv[]) {
 
     unsigned long long windowValue = 0;
     unsigned long long displayIndexValue = 0;
-    // Eight arguments is the ordinal-only form. Nine adds the short label.
-    if (std::wcscmp(argv[1], L"notify") == 0 && (argc == 8 || argc == 9)
+    // Eight arguments is the ordinal-only form. Nine adds the short label. Ten
+    // adds the workspace name; an empty argv[8] then means no label.
+    if (std::wcscmp(argv[1], L"notify") == 0 && (argc == 8 || argc == 9 || argc == 10)
         && parseUnsigned(argv[2], windowValue)
         && parseUnsigned(argv[3], extensionHostValue)
         && parseNonNegative(argv[7], displayIndexValue)
@@ -690,7 +713,8 @@ int wmain(int argc, wchar_t* argv[]) {
         return notify(reinterpret_cast<HWND>(static_cast<UINT_PTR>(windowValue)),
                       static_cast<DWORD>(extensionHostValue), argv[4], argv[5], argv[6],
                       static_cast<unsigned int>(displayIndexValue),
-                      argc == 9 ? argv[8] : nullptr);
+                      argc >= 9 && argv[8][0] != L'\0' ? argv[8] : nullptr,
+                      argc == 10 ? argv[9] : nullptr);
     }
 
     if (std::wcscmp(argv[1], L"focus") == 0 && argc == 4

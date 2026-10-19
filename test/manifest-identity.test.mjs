@@ -26,11 +26,13 @@ test("the public VS Code extension identity is Ahton", () => {
   assert.equal(manifest.contributes.configuration.title, "Ahton");
   assert.deepEqual(
     Object.keys(manifest.contributes.configuration.properties),
-    ["ahton.enabled", "ahton.showTerminalLabel", "ahton.rollover.enabled"],
+    ["ahton.enabled", "ahton.showTerminalLabel", "ahton.showWorkspaceName", "ahton.rollover.enabled"],
   );
   const settings = manifest.contributes.configuration.properties;
   assert.equal(settings["ahton.showTerminalLabel"].type, "boolean");
   assert.equal(settings["ahton.showTerminalLabel"].default, true);
+  assert.equal(settings["ahton.showWorkspaceName"].type, "boolean");
+  assert.equal(settings["ahton.showWorkspaceName"].default, true);
   assert.equal(settings["ahton.rollover.enabled"].type, "boolean");
   assert.equal(settings["ahton.rollover.enabled"].default, false);
   assert.ok(commands.some((command) =>

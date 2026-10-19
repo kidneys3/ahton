@@ -14,9 +14,13 @@ Its white surface has a single Azure prism that crosses the top edge over
 12 seconds; Windows' reduced-animation setting disables that movement. A
 generated session-local label such as `Terminal 3` identifies the target
 without exposing the terminal's real title. The helper accepts only
-process/window integers, fixed provider/reason/display enums, and that ordinal;
-it never receives workspace names, paths, prompts, replies, raw terminal names,
-or chat identifiers. Only terminal display targets are valid.
+process/window integers, fixed provider/reason/display enums, that ordinal, an
+optional validated label and an optional validated VS Code folder name (at most
+28 characters, four words, letters, digits, spaces and `& . _ -`). The folder
+name leads the chip, for example `api · Terminal 3`; with none, the chip is
+unchanged. The helper ignores a name outside those rules and never receives
+paths, prompts, replies, raw terminal names, or chat identifiers. Only terminal
+display targets are valid.
 
 Build an x64 release binary from a Visual Studio developer prompt:
 

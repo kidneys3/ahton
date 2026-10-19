@@ -2,7 +2,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
 import { parseWindowHandle } from "./window-focus.mjs";
-import { shortLabel } from "./terminal-display-label.mjs";
+import { shortLabel, workspaceLabel } from "./terminal-display-label.mjs";
 
 const execFileAsync = promisify(execFile);
 const PROVIDERS = new Set(["claude", "codex"]);
@@ -26,6 +26,7 @@ function validDisplayTarget(value) {
   // field that carries text a person chose, so it is validated at the boundary
   // it crosses as well as where it was produced.
   if (target.label !== undefined && shortLabel(target.label) !== target.label) return false;
+  if (target.workspace !== undefined && workspaceLabel(target.workspace) !== target.workspace) return false;
   return target.kind === "terminal" && Number(target.index) >= 1 && Number(target.index) <= 999;
 }
 
@@ -37,7 +38,7 @@ function validDisplayTarget(value) {
  * @param {number} extensionHostPid
  * @param {string} provider
  * @param {string} reason
- * @param {{kind: string, index: number, label?: string}} displayTarget
+ * @param {{kind: string, index: number, label?: string, workspace?: string}} displayTarget
  * @param {typeof execFileAsync} [run]
  * @param {NodeJS.Platform} [platform]
  */
@@ -63,11 +64,15 @@ export function startNativeNotification(
     try {
       await run(
         helperPath,
-        // The label is the last argument and is omitted entirely when absent, so
-        // the helper's older 8-argument form stays exactly as it was.
+        // Optional trailing arguments, omitted when absent, so the helper's older
+        // 8-argument (ordinal) and 9-argument (ordinal+label) forms stay exactly
+        // as they were. The 10-argument form is used only when a workspace name
+        // is present: argv[8] is the label or "" for none, argv[9] the workspace.
         ["notify", target, String(extensionHostPid), provider, reason,
           displayTarget.kind, String(displayTarget.index),
-          ...(displayTarget.label === undefined ? [] : [displayTarget.label])],
+          ...(displayTarget.workspace !== undefined
+            ? [displayTarget.label ?? "", displayTarget.workspace]
+            : displayTarget.label === undefined ? [] : [displayTarget.label])],
         { windowsHide: true, timeout: 125_000, maxBuffer: 1024, signal: controller.signal },
       );
       return "activated";

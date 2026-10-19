@@ -38,6 +38,7 @@ Send a test with **Ahton: Send Claude Routing Test Notification** or **Ahton: Se
 | --- | --- | --- |
 | `ahton.enabled` | `true` | Routes Claude Code and Codex CLI terminal signals to a popup. |
 | `ahton.showTerminalLabel` | `true` | Shows a name you gave the terminal in the popup. When off, the popup shows the provider name and a terminal number only. |
+| `ahton.showWorkspaceName` | `true` | Shows the VS Code window's folder name (for example `api`) in the popup, so each window's popup says which project it belongs to. A name over 28 characters, over four words, or with a path or quote character is left out. Unlike a terminal name, it needs no `claude` or `codex` prefix. |
 | `ahton.rollover.enabled` | `false` | Lets a Claude Code session ask Ahton to open a fresh Claude terminal in the workspace. When off, the request is refused and counted, and no terminal opens. |
 
 A terminal name is shown only if it starts with `claude`, `codex`, `kimi`, `c`, `d` or `k`, then a word, and is at most 28 characters and four words. Examples: `claude api`, `c web`, `d docs`, `k notes`. Any other name is not shown. The popup shows `Terminal 3` instead.

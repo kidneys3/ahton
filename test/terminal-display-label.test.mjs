@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { TerminalDisplayRegistry, shortLabel, withLabelPreference } from "../src/terminal-display-label.mjs";
+import { TerminalDisplayRegistry, shortLabel, withLabelPreference, workspaceLabel } from "../src/terminal-display-label.mjs";
 
 test("terminal display assigns stable non-reused session ordinals", () => {
   const labels = new TerminalDisplayRegistry();
@@ -114,4 +114,28 @@ test("with the label setting off the popup target keeps its ordinal and drops th
   // A target with no label passes through unchanged, and the input is not mutated.
   assert.deepEqual(withLabelPreference({ kind: "terminal", index: 2 }, false), { kind: "terminal", index: 2 });
   assert.equal(target.label, "Claude Api");
+});
+
+test("a workspace name is shown without the provider prefix", () => {
+  assert.equal(workspaceLabel("api"), "api");
+  assert.equal(workspaceLabel("web docs"), "web docs");
+  assert.equal(workspaceLabel("  web   docs "), "web docs");
+});
+
+test("a multi-root workspace suffix is stripped", () => {
+  assert.equal(workspaceLabel("api (Workspace)"), "api");
+  assert.equal(workspaceLabel(" (Workspace)"), null);
+});
+
+test("a workspace name that is a path, too long, too wordy or quoted is omitted", () => {
+  assert.equal(workspaceLabel("C:\Work\api"), null);
+  assert.equal(workspaceLabel("a".repeat(29)), null);
+  assert.equal(workspaceLabel("a".repeat(28)), "a".repeat(28));
+  assert.equal(workspaceLabel("one two three four five"), null);
+  assert.equal(workspaceLabel('api "x"'), null);
+  assert.equal(workspaceLabel("it's"), null);
+  assert.equal(workspaceLabel("a..b"), null);
+  assert.equal(workspaceLabel("---"), null);
+  assert.equal(workspaceLabel(""), null);
+  assert.equal(workspaceLabel(undefined), null);
 });

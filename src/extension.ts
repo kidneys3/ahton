@@ -20,7 +20,7 @@ import { startShellIntegratedTerminal } from "./managed-terminal.mjs";
 import { dispatchRollover } from "./rollover-dispatch.mjs";
 import { activateExactTerminal } from "./terminal-activation.mjs";
 import { startNativeNotification } from "./native-notification.mjs";
-import { TerminalDisplayRegistry, withLabelPreference } from "./terminal-display-label.mjs";
+import { TerminalDisplayRegistry, withLabelPreference, workspaceLabel } from "./terminal-display-label.mjs";
 import { withTimestamps } from "./diagnostic-log.mjs";
 import { terminalFocusCommand } from "./terminal-location.mjs";
 import { holdActivatedWindow } from "./focus-hold.mjs";
@@ -419,6 +419,18 @@ function showTerminalLabel(): boolean {
     .get<boolean>("showTerminalLabel", true);
 }
 
+function showWorkspaceName(): boolean {
+  return vscode.workspace
+    .getConfiguration("ahton")
+    .get<boolean>("showWorkspaceName", true);
+}
+
+function displayTargetFor(terminal: vscode.Terminal) {
+  const target = withLabelPreference(terminalDisplayRegistry.targetFor(terminal), showTerminalLabel());
+  const workspace = showWorkspaceName() ? workspaceLabel(vscode.workspace.name) : null;
+  return workspace === null ? target : { ...target, workspace };
+}
+
 function isEnabled(): boolean {
   return vscode.workspace
     .getConfiguration("ahton")
@@ -457,7 +469,7 @@ async function sendNotification(
   const generation = activationGeneration;
   const session = startNativeNotification(
     focusHelperPath, owningWindowHandle, process.pid, signal.provider, signal.reason,
-    withLabelPreference(terminalDisplayRegistry.targetFor(terminal), showTerminalLabel()),
+    displayTargetFor(terminal),
   );
   livePopups.add(session);
   output?.appendLine(`popup_issued target=terminal provider=${signal.provider} reason=${signal.reason}`);

@@ -93,6 +93,11 @@
           "default": true,
           "description": "Show the name you gave a terminal (for example \"claude api\") in the popup. Turn off to show the provider name only. The name is shown only if it follows the label rules in the README."
         },
+        "ahton.showWorkspaceName": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show this VS Code window's folder name (for example \"api\") in the popup, so each window's popup says which project it belongs to. Turn off to omit it. The name is shown only if it follows the label rules in the README."
+        },
         "ahton.rollover.enabled": {
           "type": "boolean",
           "default": false,

@@ -20,6 +20,14 @@ test("native restore is limited to minimized windows", () => {
   assert.equal((source.match(/ShowWindowAsync\(target, SW_RESTORE\)/g) ?? []).length, 1);
 });
 
+test("native popup shows the workspace name in the chip and no PROVIDER eyebrow", () => {
+  const source = readFileSync(sourceUrl, "utf8");
+  assert.doesNotMatch(source, /PROVIDER/);
+  assert.match(source, /argc == 10/);
+  assert.match(source, /isAcceptableWorkspace/);
+  assert.match(source, /0x00B7/);
+});
+
 test("native popup is fixed-content, non-activating, and authority-bound", () => {
   const source = readFileSync(sourceUrl, "utf8");
   assert.match(source, /WS_EX_TOPMOST \| WS_EX_TOOLWINDOW \| WS_EX_NOACTIVATE/);
